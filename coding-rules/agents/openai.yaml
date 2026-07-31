@@ -1,0 +1,4 @@
+interface:
+  display_name: "coding-Rules"
+  short_description: "为多智能体项目生成并强制执行审批、任务卡、验收和交接规则"
+  default_prompt: "使用 $coding-rules 为当前项目建立严格的执行规则、任务卡和交接体系。"
