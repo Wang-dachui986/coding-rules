@@ -44,27 +44,45 @@ or destructive actions.
 7. Default to R0 plus R1-R3 only when the project needs durable parallel
    workstreams. For a small project, keep R0 and mark unused roles `IDLE`.
 8. Validate that every referenced file exists, role ownership does not overlap,
-   status vocabulary is consistent, and no secret entered the documents.
+   status vocabulary is consistent, module acceptance has one explicit entry,
+   completion reports carry approval states, and no secret entered the documents.
 9. Report created and merged files, unresolved placeholders, and the one next
    approval required. Do not begin product work.
 
 ## Enforcement after bootstrap
 
-- Read `docs/handoffs/PROJECT.md`, the active role handoff, and the approved
-  task card before continuing after interruption or context compression.
+- At every approved task start, and again after interruption, context
+  compression, or a “continue/next” request, read `AGENTS.md`, PROJECT, the
+  active role handoff, the approved task card, and its referenced inputs. Do
+  not rely on chat memory or a previous read.
 - R0 is the only durable task-distribution and integration entry.
 - R1-R3 execute only owner-approved task cards distributed by R0.
 - Discussion and explanation need no approval. Mutating actions and external
   operations follow the generated approval boundary.
 - Every task card must name one owner, exact scope, allowed files/actions,
   validation, forbidden actions, stop conditions, and handoff updates.
-- Finish a small feature as one loop:
-  `complete inspection → concentrated fix → targeted verification → one full acceptance`.
+- Each R1-R3 subtask follows:
+  `complete inspection → concentrated fix → targeted verification → handoff`.
+  Its maximum normal result is `COMPLETED_MODULE_INPUT_READY`, not system
+  acceptance.
+- Between subtasks, R0 performs only a light receipt check of card identity,
+  scope, handoff, evidence, dependencies, and high-risk stop conditions. Do
+  not rerun full tests, builds, or browser matrices for every role.
+- Run one systematic acceptance only after the predefined module's subtasks,
+  shared integration, and required runtime surfaces are complete.
+- Escalate security, secret exposure, data-loss risk, real product blockers,
+  contract conflicts, and out-of-scope edits immediately. If the owner
+  ratifies a shared-file exception, record the exact file and non-expanding
+  boundary before continuing.
 - Do not claim completion without actual evidence and updated handoffs.
 - Separate verified fact, inference, not-run, blocked, failed, and approved but
   unexecuted work.
 - Never place passwords, tokens, private keys, full server addresses, cookies,
   private URLs, user data, or raw access logs in governance documents.
+- Every completion response and role handoff must list completed work, actual
+  validation and NOT_RUN items, total project progress, ordered next tasks,
+  and each next task's approval state. Current approval never authorizes the
+  next task.
 
 ## Conversation and agent routing
 
@@ -76,6 +94,11 @@ or destructive actions.
   approval.
 - Send each role the approved task card unchanged, including the files to read
   first and handoffs to update last.
+- Finalize approval source, status, version, and any fixed digest before
+  distribution. If the card changes afterward, issue a new version/digest and
+  obtain any approval required by the project instead of silently drifting it.
+- Prefer the existing long-lived role conversation and confirm that it
+  received or started the task when thread tools expose that state.
 - R0 independently accepts or rejects returned evidence; a role's completion
   claim is not final acceptance.
 
