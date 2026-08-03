@@ -68,6 +68,12 @@ or destructive actions.
 - Between subtasks, R0 performs only a light receipt check of card identity,
   scope, handoff, evidence, dependencies, and high-risk stop conditions. Do
   not rerun full tests, builds, or browser matrices for every role.
+- After every R1-R3 result, R0 automatically completes that light receipt,
+  updates R0 and PROJECT handoffs as needed, and drafts the next repair or
+  module task card. Do not ask separately whether to draft the next card.
+- Freeze the next card's ID, version, scope, `WAITING_APPROVAL` status, and
+  digest, then report it to the owner. Drafting is governance closeout only:
+  never distribute or execute the card before explicit owner approval.
 - Run one systematic acceptance only after the predefined module's subtasks,
   shared integration, and required runtime surfaces are complete.
 - Escalate security, secret exposure, data-loss risk, real product blockers,
@@ -101,6 +107,9 @@ or destructive actions.
   received or started the task when thread tools expose that state.
 - R0 independently accepts or rejects returned evidence; a role's completion
   claim is not final acceptance.
+- A returned completion, failure, or blocker triggers R0's automatic closeout
+  sequence: light receipt, handoff update, next-card draft, owner report, and
+  approval wait. It never authorizes distribution or product execution.
 
 ## Code intelligence
 
