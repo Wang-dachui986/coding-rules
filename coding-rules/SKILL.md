@@ -57,6 +57,9 @@ or destructive actions.
   not rely on chat memory or a previous read.
 - R0 is the only durable task-distribution and integration entry.
 - R1-R3 execute only owner-approved task cards distributed by R0.
+- R1-R3 never plan the project, draft or alter follow-up cards, assign other
+  roles, calculate total progress, or propose project-wide next steps. They
+  execute, verify, update their own handoff, return facts to R0, and wait.
 - Discussion and explanation need no approval. Mutating actions and external
   operations follow the generated approval boundary.
 - Every task card must name one owner, exact scope, allowed files/actions,
@@ -85,10 +88,13 @@ or destructive actions.
   unexecuted work.
 - Never place passwords, tokens, private keys, full server addresses, cookies,
   private URLs, user data, or raw access logs in governance documents.
-- Every completion response and role handoff must list completed work, actual
-  validation and NOT_RUN items, total project progress, ordered next tasks,
-  and each next task's approval state. Current approval never authorizes the
-  next task.
+- R1-R3 completion responses and handoffs list only completed work, changed
+  files, actual validation and NOT_RUN items, evidence, blockers/limits, and
+  that the result was returned to R0. They do not report total project
+  progress or design follow-up work.
+- Only R0 reports total project progress, drafts ordered next tasks, assigns
+  approval states, and asks the owner for the next approval. Current approval
+  never authorizes the next task.
 
 ## Conversation and agent routing
 
