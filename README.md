@@ -8,6 +8,7 @@
 - 上下文压缩、中断恢复和交接文档；
 - R1–R3 定向验证、R0 轻量接收和模块末单次系统验收；
 - 完成汇报、项目总进度、下一步顺序和逐项审批状态；
+- R0 唯一维护开发进度制品，并在每次任务闭环后同步功能、审批和更新日志；
 - 证据真实性、CodeGraph 和验收闭环规则。
 
 本仓库只包含通用项目开发治理规则和空白模板，不包含任何具体项目源码、凭据或运行证据。
@@ -52,8 +53,9 @@ coding-rules/
 `coding-rules` is a reusable Codex skill for project governance. It bootstraps
 approval boundaries, task cards, R0–R3 ownership, multi-conversation routing,
 context recovery, module-level acceptance, approval-aware next steps, evidence
-rules, and durable handoffs. It contains generic governance templates only and
-does not include product code or project secrets.
+rules, an R0-owned development-progress artifact, and durable handoffs. It
+contains generic governance templates only and does not include product code
+or project secrets.
 
 ## License
 

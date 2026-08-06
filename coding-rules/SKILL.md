@@ -77,6 +77,17 @@ or destructive actions.
 - Freeze the next card's ID, version, scope, `WAITING_APPROVAL` status, and
   digest, then report it to the owner. Drafting is governance closeout only:
   never distribute or execute the card before explicit owner approval.
+- Before any R1-R3 distribution, R0 performs one lightweight read-only
+  dispatch-conflict preflight against the current workspace, last accepted
+  baseline, role handoffs, dependencies, file ownership, allowed paths,
+  validation, and stop conditions. Use CodeGraph for code impact. Do not run
+  full tests or acceptance during this preflight.
+- If the preflight finds a missing file permission, conflicting objective,
+  insufficient frozen input, overlapping active ownership, impossible
+  validation, or an already-known stop condition, do not distribute. Revise
+  the card, issue a new version/digest, and return it for owner approval.
+- Only a recorded `READY_FOR_OWNER_APPROVAL` preflight plus explicit approval
+  of that exact card version permits distribution. Preflight is not approval.
 - Run one systematic acceptance only after the predefined module's subtasks,
   shared integration, and required runtime surfaces are complete.
 - Escalate security, secret exposure, data-loss risk, real product blockers,
@@ -95,6 +106,16 @@ or destructive actions.
 - Only R0 reports total project progress, drafts ordered next tasks, assigns
   approval states, and asks the owner for the next approval. Current approval
   never authorizes the next task.
+- When a project uses a durable development-progress artifact, R0 is its only
+  maintainer. At every task closeout, R0 updates the affected feature rows,
+  approvals, update log, as-of date, and project summary from accepted evidence.
+  R1-R3 only return verified facts in their handoffs and never edit the tracker.
+- A progress tracker is a reporting view, not an acceptance source. Keep
+  evidence-backed system-acceptance progress separate from planning estimates
+  or arithmetic averages, and never mark `NOT_RUN` work as accepted.
+- If the tracker is a spreadsheet, keep one stable owner-facing path and verify
+  key formulas, formula errors, and every changed sheet's visual rendering after
+  each update.
 
 ## Conversation and agent routing
 
@@ -106,6 +127,8 @@ or destructive actions.
   approval.
 - Send each role the approved task card unchanged, including the files to read
   first and handoffs to update last.
+- Distribution evidence must cite the dispatch-conflict preflight artifact,
+  exact card digest, resolved conflicts, and remaining limitations.
 - Finalize approval source, status, version, and any fixed digest before
   distribution. If the card changes afterward, issue a new version/digest and
   obtain any approval required by the project instead of silently drifting it.
