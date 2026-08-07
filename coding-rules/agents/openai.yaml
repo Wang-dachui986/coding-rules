@@ -1,4 +1,4 @@
 interface:
   display_name: "coding-Rules"
-  short_description: "为多智能体项目生成并强制执行审批、任务卡、验收和交接规则"
-  default_prompt: "使用 $coding-rules 为当前项目建立严格的执行规则、任务卡和交接体系。"
+  short_description: "生成项目治理规则并初始化 R1-R3 长期执行对话"
+  default_prompt: "使用 $coding-rules 检查当前项目，非破坏性建立治理规则，并创建或复用 R1-R3 长期执行对话。"

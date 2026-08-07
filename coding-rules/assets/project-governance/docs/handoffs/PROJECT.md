@@ -30,6 +30,15 @@
 | R2 | 无 | `IDLE` | `docs/handoffs/R2.md` |
 | R3 | 无 | `IDLE` | `docs/handoffs/R3.md` |
 
+## 对话初始化
+
+- R0：`[当前总控对话]`
+- R1：`[对话 ID/NOT_CREATED]`
+- R2：`[对话 ID/NOT_CREATED]`
+- R3：`[对话 ID/NOT_CREATED]`
+- 使用方法：项目所有者只在 R0 提出需求和审批；R0 自动规划、制卡并分发
+  获批任务，R1-R3 保持 `IDLE` 直到收到任务卡。
+
 ## 已批准但未完成
 
 - 无。

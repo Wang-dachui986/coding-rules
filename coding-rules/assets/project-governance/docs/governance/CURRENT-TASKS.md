@@ -4,6 +4,7 @@
 - 当前版本：`[待确认]`
 - 总状态：`PLANNED`
 - 最近更新：`[YYYY-MM-DD]`
+- R1-R3 对话初始化：`[CREATED_OR_REUSED/NOT_CREATED]`
 
 ## 当前唯一权威任务
 

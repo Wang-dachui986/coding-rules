@@ -5,19 +5,29 @@ description: Bootstrap, merge, and enforce a reusable project-governance system 
 
 # coding-Rules
 
-Build the governance surface, then stop. Treat explicit invocation as approval
-only to inspect existing governance files, create or merge governance documents,
-and validate those documents. It does not approve product changes, tests,
-network access, Git operations, deployments, server access, purchases, messages,
-or destructive actions.
+Build the governance surface and initialize the execution conversations, then
+stop. A first explicit invocation authorizes read-only project classification,
+non-destructive governance creation or merge, validation, and creation of the
+three missing long-lived R1-R3 project threads. It does not approve product
+changes, tests, network access, Git operations, deployments, server access,
+purchases, messages outside those initialization threads, or destructive
+actions.
 
 ## Bootstrap workflow
 
-1. Locate the project root.
-2. Read an existing `AGENTS.md` and existing governance/handoff files before
+1. Locate the project root and treat the current conversation as R0.
+2. Inspect the project tree without reading secrets. Ignore VCS metadata,
+   editor metadata, OS metadata, caches, and generated governance files when
+   deciding whether meaningful project files exist.
+   - If meaningful code, configuration, documentation, assets, or tests exist,
+     classify it as an existing project and merge governance without deleting,
+     moving, renaming, or overwriting project files.
+   - If no meaningful project files exist, classify it as an empty project and
+     materialize the governance files directly.
+3. Read an existing `AGENTS.md` and existing governance/handoff files before
    writing. Preserve stricter instructions and user decisions.
-3. Read [operating-model.md](references/operating-model.md).
-4. Materialize the templates under
+4. Read [operating-model.md](references/operating-model.md).
+5. Materialize the templates under
    [project-governance](assets/project-governance/) into the project:
 
    ```text
@@ -34,20 +44,44 @@ or destructive actions.
    docs/handoffs/R3.md
    ```
 
-5. For a new project, copy the templates and replace bracketed placeholders
+6. For an empty project, copy the templates and replace bracketed placeholders
    with verified facts. Leave unknown decisions as `[待项目所有者确认]`.
-6. For an existing project, merge instead of overwrite:
+7. For an existing project, merge instead of overwrite:
    - keep project-specific safety and approval rules;
    - keep established paths and role names when consistent;
    - add missing recovery, task-card, evidence, and handoff gates;
    - never silently weaken an existing rule.
-7. Default to R0 plus R1-R3 only when the project needs durable parallel
-   workstreams. For a small project, keep R0 and mark unused roles `IDLE`.
-8. Validate that every referenced file exists, role ownership does not overlap,
+8. On first initialization, create or recover the execution conversations:
+   - Use `list_projects` to resolve the current saved project, then
+     `list_threads` to inspect existing project threads before creating anything.
+   - Reuse any existing R1, R2, or R3 thread. Create exactly one long-lived local
+     project thread for each missing role; never create duplicates and never use
+     short-lived subagents as substitutes.
+   - Use `create_thread` with the resolved project and local environment, then
+     `set_thread_title` when available. Title threads consistently as
+     `<project-name> · R1`, `<project-name> · R2`, and `<project-name> · R3`.
+   - Use this role prompt, replacing `<ROLE>` only: "You are <ROLE>, a long-lived
+     execution role for this project. Read AGENTS.md, docs/handoffs/PROJECT.md,
+     docs/handoffs/<ROLE>.md, and docs/governance/WORKSTREAMS.md. Set your status
+     to IDLE. Do not plan the project, create task cards, modify product files,
+     run commands or tests, or contact other roles. Wait for an owner-approved
+     task card distributed by R0."
+   - Record verified thread identifiers/status in `WORKSTREAMS.md` and the role
+     handoffs when the tools expose them. Never invent an identifier.
+   - If project/thread tools are unavailable or thread creation fails, mark each
+     uncreated role `NOT_CREATED`, provide three ready-to-send role prompts, and
+     state the exact blocker. Do not claim initialization succeeded.
+   - Emit any created-thread UI directives required by the active Codex product
+     so the new threads are visible to the user.
+9. Validate that every referenced file exists, role ownership does not overlap,
    status vocabulary is consistent, module acceptance has one explicit entry,
-   completion reports carry approval states, and no secret entered the documents.
-9. Report created and merged files, unresolved placeholders, and the one next
-   approval required. Do not begin product work.
+   completion reports carry approval states, R1-R3 thread status is truthful,
+   and no secret entered the documents.
+10. End with a concise onboarding message that explains R1, R2, and R3 and says:
+    the user only needs to continue in R0; R0 plans, prepares task cards, obtains
+    approval, and distributes approved cards automatically. Report created or
+    reused role threads, unresolved placeholders, and the next approval required.
+    Do not begin product work.
 
 ## Enforcement after bootstrap
 
@@ -123,8 +157,12 @@ or destructive actions.
   independent ownership.
 - Use short-lived subagents only for bounded parallel review or research when
   project rules and the user permit delegation.
-- Do not create new conversations or redistribute ownership without owner
-  approval.
+- A first explicit `$coding-rules` invocation is approval to create exactly the
+  missing R1-R3 initialization threads described above. Outside that one
+  non-executing initialization, do not create conversations or redistribute
+  ownership without owner approval.
+- Before any creation, list existing project threads and reuse matching roles.
+  Never create a second R1, R2, or R3 thread for the same project.
 - Send each role the approved task card unchanged, including the files to read
   first and handoffs to update last.
 - Distribution evidence must cite the dispatch-conflict preflight artifact,
