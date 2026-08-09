@@ -6,6 +6,14 @@
 - 最近更新：`[YYYY-MM-DD]`
 - R1-R3 对话初始化：`[CREATED_OR_REUSED/NOT_CREATED]`
 
+## 需求澄清与计划
+
+- 问答模式：`[LIGHT/FULL/待选择]`
+- 需求覆盖率：`[0-100]%`
+- 阻塞性未知项：`[NONE/列明]`
+- 计划状态：`DISCOVERY / WAITING_REVIEW / APPROVED / SUPERSEDED`
+- 获批计划：`[路径/NOT_APPROVED]`
+
 ## 当前唯一权威任务
 
 | 任务 ID | 负责人 | 状态 | 批准范围 | 任务卡 | 证据 |

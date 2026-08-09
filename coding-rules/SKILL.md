@@ -5,8 +5,8 @@ description: Bootstrap, merge, and enforce a reusable project-governance system 
 
 # coding-Rules
 
-Build the governance surface and initialize the execution conversations, then
-stop. A first explicit invocation authorizes read-only project classification,
+Build the governance surface, initialize the execution conversations, and run
+requirements intake until a reviewable plan is ready. A first explicit invocation authorizes read-only project classification,
 non-destructive governance creation or merge, validation, and creation of the
 three missing long-lived R1-R3 project threads. It does not approve product
 changes, tests, network access, Git operations, deployments, server access,
@@ -77,11 +77,33 @@ actions.
    status vocabulary is consistent, module acceptance has one explicit entry,
    completion reports carry approval states, R1-R3 thread status is truthful,
    and no secret entered the documents.
-10. End with a concise onboarding message that explains R1, R2, and R3 and says:
+10. End initialization with a concise onboarding message that explains R1, R2,
+    and R3 and says:
     the user only needs to continue in R0; R0 plans, prepares task cards, obtains
     approval, and distributes approved cards automatically. Report created or
     reused role threads, unresolved placeholders, and the next approval required.
     Do not begin product work.
+11. Read [intake-model.md](references/intake-model.md), offer `LIGHT` and `FULL`
+    requirements modes, then ask exactly one question per response until the
+    95% planning gate is met.
+
+## Requirements intake and planning gate
+
+- Empty project: ask normal discovery questions without inventing a stack or
+  requirements.
+- Existing project: first scan the non-secret tree and read relevant development
+  documents; report verified facts, gaps, non-destructive additions, and suggested
+  adjustments before asking the first unanswered question.
+- Ask at most one question in each assistant response. Absorb every fact in the
+  answer, then ask the highest-impact remaining question.
+- `LIGHT` minimizes question depth for small work. `FULL` covers detailed users,
+  workflows, functions, data, interfaces, non-functional needs, environments,
+  delivery, risks, and acceptance. Neither mode weakens governance.
+- Do not draft a plan until the weighted requirements coverage in
+  [intake-model.md](references/intake-model.md) is at least 95%, all blocking
+  dimensions are known, and no material ambiguity remains.
+- Present the resulting plan as `WAITING_REVIEW`. Product work, task distribution,
+  and execution still require the approvals defined by the generated governance.
 
 ## Enforcement after bootstrap
 
@@ -111,6 +133,9 @@ actions.
 - Freeze the next card's ID, version, scope, `WAITING_APPROVAL` status, and
   digest, then report it to the owner. Drafting is governance closeout only:
   never distribute or execute the card before explicit owner approval.
+- If the owner explicitly says to stop after the current task and not draft a
+  follow-up card, complete receipt and handoff only; this explicit instruction
+  overrides automatic follow-up drafting without weakening any other closeout.
 - Before any R1-R3 distribution, R0 performs one lightweight read-only
   dispatch-conflict preflight against the current workspace, last accepted
   baseline, role handoffs, dependencies, file ownership, allowed paths,
@@ -190,3 +215,15 @@ follow the environment's indexing policy; do not initialize it silently.
 Templates are output assets, not project truth. Replace placeholders only with
 verified information. If merging would overwrite a meaningful existing rule,
 stop and request one precise decision.
+
+Use this deterministic merge order:
+
+1. identical rule: keep one;
+2. project rule is stricter: keep it;
+3. Skill supplies a missing non-conflicting gate: add it;
+4. path or role name differs but meaning agrees: keep the project name and record
+   the mapping;
+5. objectives or permissions conflict: do not write; report one precise conflict
+   for the owner to decide.
+
+Before completion, run `uv run scripts/validate_skill.py` against the Skill root.

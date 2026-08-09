@@ -9,6 +9,15 @@
 
 - `[事实；未知内容不要猜测]`
 
+## 需求澄清与计划审阅
+
+- 问答模式：`[LIGHT/FULL/待选择]`
+- 需求覆盖率：`[0-100]%`
+- 已确认范围：`[摘要/NOT_RUN]`
+- 阻塞性未知项：`[NONE/列明]`
+- 计划状态：`DISCOVERY / WAITING_REVIEW / APPROVED / SUPERSEDED`
+- 获批计划：`[路径/NOT_APPROVED]`
+
 ## 当前实现与制品
 
 - `NOT_RUN`

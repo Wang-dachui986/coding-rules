@@ -38,6 +38,10 @@
 
 ```text
 候选需求
+  → 选择 LIGHT 或 FULL 问答模式
+  → 单问题逐轮澄清至需求覆盖率至少 95%
+  → R0 提交 WAITING_REVIEW 计划
+  → 项目所有者批准精确计划
   → R0 调查和拟定任务卡
   → R0 分发前冲突预检
   → 有冲突则修订任务卡并重新固定摘要
@@ -59,11 +63,29 @@
   → 项目所有者决定下一步
 ```
 
-状态只使用：
+状态必须按字段命名空间分开记录，不得把审批、验证或预检结论写入任务状态：
 
-`PLANNED`、`WAITING_APPROVAL`、`APPROVED`、`IN_PROGRESS`、
-`COMPLETED_MODULE_INPUT_READY`、`COMPLETED_PENDING_REVIEW`、
-`COMPLETED_ACCEPTED`、`BLOCKED`、`FAILED`、`SUPERSEDED`、`IDLE`。
+- 需求模式：`LIGHT`、`FULL`；
+- 计划状态：`DISCOVERY`、`WAITING_REVIEW`、`APPROVED`、`SUPERSEDED`；
+- 任务状态：`PLANNED`、`WAITING_APPROVAL`、`APPROVED`、`IN_PROGRESS`、
+  `COMPLETED_MODULE_INPUT_READY`、`COMPLETED_PENDING_REVIEW`、
+  `COMPLETED_ACCEPTED`、`BLOCKED`、`FAILED`、`SUPERSEDED`；
+- 审批状态：`NOT_REQUIRED`、`WAITING_APPROVAL`、`APPROVED_NOT_EXECUTED`、
+  `COMPLETED`、`BLOCKED`；
+- 验证状态：`PASS`、`FAILED`、`NOT_RUN`、`LIMITED`；
+- 对话状态：`IDLE`、`IN_PROGRESS`、`NOT_CREATED`、`BLOCKED`；
+- 预检结论：`READY_FOR_OWNER_APPROVAL`、`REVISE_REQUIRED`；
+- 接收结论：`ACCEPTED_AS_MODULE_INPUT`、`REJECTED`、
+  `BLOCKED_SAFE_STOP_ACCEPTED_NOT_MODULE_INPUT`。
+
+项目确需更细的原因码时，把原因码放在独立字段，不扩张上述基础状态集合。
+
+## 3.1 需求问答与计划闸门
+
+初始化后按 [intake-model.md](intake-model.md) 运行 `LIGHT` 或 `FULL` 逐问式
+澄清。每个回复只问一个问题。已有项目先读非秘密文件和开发文档，返回现状、
+缺口、非破坏补缺和调整建议；空项目直接问答。覆盖率达到 95%、阻塞维度完整
+且无重大歧义后，R0 才能提交 `WAITING_REVIEW` 计划供项目所有者审阅。
 
 ## 4. 任务卡要求
 
@@ -201,3 +223,10 @@ R1-R3 不报告项目总进度，不设计下一步、执行顺序或审批清�
   分开标注，不得把未运行内容写成已通过。
 - 使用电子表格时，每次更新后检查关键区域和公式、扫描公式错误，并对所有
   变更工作表进行视觉检查；验证结果和制品摘要由 R0 写入交接。
+
+## 12. 既有项目治理合并
+
+按机械顺序处理每条规则：完全相同则去重；项目规则更严格则保留；Skill 缺失
+且不冲突的门槛则追加；路径或角色名称不同但语义一致则保留项目命名并记录
+映射；目标、权限或安全边界冲突则不写入，只向项目所有者提出一个精确问题。
+任何合并都不得静默放宽现有规则。
