@@ -16,6 +16,7 @@ REQUIRED_PATHS: Final = (
     "SKILL.md",
     "agents/openai.yaml",
     "references/intake-model.md",
+    "references/operating-model.md",
     "assets/project-governance/AGENTS.md",
     "assets/project-governance/docs/governance/CURRENT-TASKS.md",
     "assets/project-governance/docs/governance/HANDOFF-PROTOCOL.md",
@@ -37,21 +38,34 @@ SECRET_PATTERN: Final = re.compile(
 )
 
 
+def _read_utf8(path: Path, skill_root: Path, errors: list[str]) -> str | None:
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        message = f"not valid UTF-8: {path.relative_to(skill_root)}"
+        if message not in errors:
+            errors.append(message)
+        return None
+
+
 def validate(skill_root: Path) -> list[str]:
     errors = [f"missing: {path}" for path in REQUIRED_PATHS if not (skill_root / path).exists()]
     skill_file = skill_root / "SKILL.md"
     if skill_file.exists():
-        text = skill_file.read_text(encoding="utf-8")
-        if not text.startswith("---\nname: coding-rules\n") or "\ndescription:" not in text:
-            errors.append("invalid SKILL.md frontmatter")
-        for target in LINK_PATTERN.findall(text):
-            if "://" not in target and not (skill_file.parent / target).resolve().exists():
-                errors.append(f"broken SKILL.md link: {target}")
+        text = _read_utf8(skill_file, skill_root, errors)
+        if text is not None:
+            if not text.startswith("---\nname: coding-rules\n") or "\ndescription:" not in text:
+                errors.append("invalid SKILL.md frontmatter")
+            for target in LINK_PATTERN.findall(text):
+                if "://" not in target and not (skill_file.parent / target).resolve().exists():
+                    errors.append(f"broken SKILL.md link: {target}")
 
     for role in ("R1", "R2", "R3"):
         handoff = skill_root / f"assets/project-governance/docs/handoffs/{role}.md"
         if handoff.exists():
-            text = handoff.read_text(encoding="utf-8")
+            text = _read_utf8(handoff, skill_root, errors)
+            if text is None:
+                continue
             errors.extend(
                 f"{role} contains R0-only heading: {heading}"
                 for heading in FORBIDDEN_ROLE_HEADINGS
@@ -62,7 +76,8 @@ def validate(skill_root: Path) -> list[str]:
         if path.name.startswith("._") or path.name == ".DS_Store":
             errors.append(f"metadata file: {path.relative_to(skill_root)}")
         if path.is_file() and path.suffix in {".md", ".yaml"}:
-            if SECRET_PATTERN.search(path.read_text(encoding="utf-8")):
+            text = _read_utf8(path, skill_root, errors)
+            if text is not None and SECRET_PATTERN.search(text):
                 errors.append(f"secret-shaped content: {path.relative_to(skill_root)}")
     return errors
 

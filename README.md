@@ -1,5 +1,255 @@
 # coding-rules
 
+[![CI](https://github.com/Wang-dachui986/coding-rules/actions/workflows/ci.yml/badge.svg)](https://github.com/Wang-dachui986/coding-rules/actions/workflows/ci.yml)
+[![MIT License](https://img.shields.io/github/license/Wang-dachui986/coding-rules)](LICENSE)
+
+[English](#english) · [中文](#中文)
+
+## English
+
+`coding-rules` is an MIT-licensed [Codex](https://developers.openai.com/codex/skills) skill for project governance. In Codex CLI or the IDE extension you invoke it with `$coding-rules`. It writes approval rules, role handoffs, and task-card templates into a coding project, then asks requirements questions until a plan is ready for review.
+
+The skill directory is [`coding-rules/`](coding-rules/). The repository root is the maintainer-facing project around that skill. There is no sample application, no credentials, and no recorded run of a product project in this repository.
+
+### What it is
+
+On an explicit `$coding-rules` invocation, Codex is instructed to:
+
+1. Treat the current conversation as **R0**.
+2. Classify the tree as an existing project or an empty project. Version-control metadata, editor metadata, OS metadata, caches, and generated governance files are ignored for that decision. Secret-shaped files are not read.
+3. For an empty project, copy the templates in [`coding-rules/assets/project-governance/`](coding-rules/assets/project-governance/) and replace bracketed placeholders only with verified facts. Unknown decisions stay `[待项目所有者确认]`.
+4. For an existing project, merge governance into the files that are already there. The merge never deletes, moves, renames, or overwrites project files. The order is fixed: keep one copy of an identical rule; keep a stricter project rule; add a missing non-conflicting gate; keep the project's path or role name when the meaning matches and record the mapping; stop and ask the owner when objectives or permissions conflict.
+5. Create or reuse three long-lived local threads, `<project-name> · R1`, `<project-name> · R2`, and `<project-name> · R3`. Each starts `IDLE`. Existing role threads are reused. Short-lived subagents are not substitutes. If thread tools are missing or creation fails, each missing role is marked `NOT_CREATED` and Codex must give you three prompts to send yourself. It must not claim that initialization succeeded.
+6. Offer **LIGHT** or **FULL** requirements intake and ask one question per reply until the planning gate in [`coding-rules/references/intake-model.md`](coding-rules/references/intake-model.md) is met, then present a plan in status `WAITING_REVIEW`.
+
+That invocation authorizes only the read-only classification, the non-destructive governance write, validation of those governance files, and creation of the missing R1–R3 threads. It does not approve product edits, tests, network access, Git, deployment, server access, purchases, messages outside those initialization threads, or destructive actions.
+
+Files an empty project receives (eleven paths):
+
+```text
+AGENTS.md
+docs/governance/OPERATING-RULES.md
+docs/governance/WORKSTREAMS.md
+docs/governance/CURRENT-TASKS.md
+docs/governance/TASK-CARD-TEMPLATE.md
+docs/governance/HANDOFF-PROTOCOL.md
+docs/handoffs/PROJECT.md
+docs/handoffs/R0.md
+docs/handoffs/R1.md
+docs/handoffs/R2.md
+docs/handoffs/R3.md
+```
+
+After initialization, the operating model in [`coding-rules/references/operating-model.md`](coding-rules/references/operating-model.md) is the source for roles, statuses, task cards, preflight, receipt, and module acceptance. In short:
+
+- **R0** is the only role that plans, writes task cards, distributes them, checks integration, and reports total progress.
+- **R1, R2, and R3** execute one owner-approved card each. They verify, update their own handoff, return facts to R0, and wait. Their normal finished state is `COMPLETED_MODULE_INPUT_READY`, which is not system acceptance.
+- The template's default duty split is a starting point, not a claim about your repository. `WORKSTREAMS.md` leaves file ownership as `[待确认]` until the project sets it. The defaults written in the template are: R1 for core business, backend, data, and automated tests; R2 for platform, integration, deployment, operations, and security boundaries; R3 for frontend, interaction, documentation surfaces, and browser QA.
+- Before distribution, R0 runs one read-only dispatch-conflict preflight. Distribution is allowed only when that preflight is recorded as `READY_FOR_OWNER_APPROVAL` and you approve that exact card version. Preflight is not approval.
+- Between subtasks, R0 does a light receipt check and drafts the next card as `WAITING_APPROVAL`. Drafting does not distribute or execute it. You can say that the current task is the last one; R0 then finishes receipt and the handoff without drafting another card.
+- One systematic acceptance runs only after that module's subtasks, shared integration, and required runtime surfaces are done.
+- Discussion needs no approval. Mutations and external operations have to be inside an approved task card.
+- When a project keeps a development-progress artifact, R0 is the only editor. The template does not invent a path for it; the placeholder is `[待项目所有者确认]`. The tracker is a report, not acceptance evidence.
+- When CodeGraph is already available, the skill tells Codex to use it before code search and impact analysis. If the project is not indexed, Codex must not initialize CodeGraph silently.
+- Passwords, tokens, private keys, cookies, full server addresses, private URLs, user data, and raw access logs do not go in governance documents.
+
+These statuses are recorded in separate fields. Approval, verification, and preflight results are not written into the task status:
+
+| Field | Values |
+| --- | --- |
+| Requirements mode | `LIGHT`, `FULL` |
+| Plan | `DISCOVERY`, `WAITING_REVIEW`, `APPROVED`, `SUPERSEDED` |
+| Task | `PLANNED`, `WAITING_APPROVAL`, `APPROVED`, `IN_PROGRESS`, `COMPLETED_MODULE_INPUT_READY`, `COMPLETED_PENDING_REVIEW`, `COMPLETED_ACCEPTED`, `BLOCKED`, `FAILED`, `SUPERSEDED` |
+| Approval | `NOT_REQUIRED`, `WAITING_APPROVAL`, `APPROVED_NOT_EXECUTED`, `COMPLETED`, `BLOCKED` |
+| Verification | `PASS`, `FAILED`, `NOT_RUN`, `LIMITED` |
+| Conversation | `IDLE`, `IN_PROGRESS`, `NOT_CREATED`, `BLOCKED` |
+| Preflight | `READY_FOR_OWNER_APPROVAL`, `REVISE_REQUIRED` |
+| Receipt | `ACCEPTED_AS_MODULE_INPUT`, `REJECTED`, `BLOCKED_SAFE_STOP_ACCEPTED_NOT_MODULE_INPUT` |
+
+A verified answer, or `NOT_APPLICABLE` that you confirm, scores coverage. The weights sum to 100:
+
+| Dimension | Weight |
+| --- | ---: |
+| Goal and observable outcome | 15 |
+| Users and core scenarios | 10 |
+| Scope and explicit exclusions | 15 |
+| Existing project state and reusable assets | 10 |
+| Functional requirements and key flows | 15 |
+| Data, interfaces, and external dependencies | 10 |
+| Security, performance, reliability, and compliance | 10 |
+| Environment, deployment, and compatibility | 5 |
+| Verification, acceptance, and definition of done | 5 |
+| Risks, approvals, and operational boundaries | 5 |
+
+Intake stops only when coverage is at least 95%, the goal, scope, definition of done, security and approval boundary, and blocking dependencies are known, and no open question would change the architecture, data model, delivery scope, or risk level. `LIGHT` may cover an irrelevant dimension with a confirmed `NOT_APPLICABLE`. `FULL` has to collect enough fact in each dimension to plan modules. Neither mode lowers the approval or evidence rules.
+
+### Who it is for
+
+Use it if you want Codex, on a repository you are willing to add governance files to, to keep an approval boundary and a written handoff across conversations.
+
+It fits a project that will split work across one controller conversation (R0) and up to three long-lived execution conversations (R1–R3). It also fits a single conversation that should still leave task cards and handoffs on disk.
+
+It is not a hosted tracker, a sample codebase, or a plugin marketplace listing. Installing the skill does not connect your repository to this GitHub project.
+
+### Install
+
+The directory Codex loads is the inner `coding-rules/` folder, the one that contains `SKILL.md`.
+
+Codex's current user-skill directory is `~/.agents/skills`. A single repository can load it from `.agents/skills/` instead. Those locations are documented at <https://developers.openai.com/codex/skills>. This repository's original install path, `~/.codex/skills`, is `$CODEX_HOME/skills`. The built-in `$skill-installer` skill still installs into that directory. Copy the skill to either place. Codex notices a new skill on its own; restart it if `$coding-rules` does not appear.
+
+```bash
+git clone https://github.com/Wang-dachui986/coding-rules.git
+cd coding-rules
+
+# Current user-skill location
+mkdir -p ~/.agents/skills
+cp -R coding-rules ~/.agents/skills/coding-rules
+
+# $CODEX_HOME/skills. $skill-installer writes here.
+mkdir -p ~/.codex/skills
+cp -R coding-rules ~/.codex/skills/coding-rules
+```
+
+For one repository, copy that same directory to `<that-repo>/.agents/skills/coding-rules`.
+
+To install from GitHub with Codex, invoke `$skill-installer` and ask it to install repository `Wang-dachui986/coding-rules` at path `coding-rules` (ref `main`). That path is the skill directory, not the repository root.
+
+A release zip, once a maintainer publishes one, has the same inner directory plus `LICENSE` at the archive root. No GitHub Release has been published yet. [CHANGELOG.md](CHANGELOG.md) describes the `0.1.0` snapshot in this repository.
+
+### Usage
+
+Open Codex in the project you want to govern and send:
+
+```text
+$coding-rules
+```
+
+If you already know the intake mode, say so in the same request (`LIGHT` or `FULL`). The skill then skips the mode question and asks the first requirements question.
+
+You stay in the R0 conversation for requests and approvals. R0 is instructed to plan, prepare task cards, obtain approval, and distribute approved cards. You do not have to manage R1–R3 yourself unless a thread could not be created.
+
+Every later approved task, and every resume after context compression or a "continue" message, starts by re-reading `AGENTS.md`, `docs/handoffs/PROJECT.md`, the active role handoff, the approved task card, and the inputs that card cites. Chat memory is not a substitute.
+
+### Worked example
+
+This is an illustration of the rules in `SKILL.md`. It is not a transcript from a Codex session, and this repository does not contain a `notes-api` project.
+
+1. The target is an empty directory, `notes-api`. No source files, docs, or tests are in it. You install the skill, restart Codex if needed, open Codex in `notes-api`, and send `$coding-rules`.
+2. Codex classifies the tree as empty. It copies the eleven governance paths listed above. Fields it cannot verify stay `[待项目所有者确认]`. It does not invent a language, framework, or feature list.
+3. It lists existing project threads, then creates any missing long-lived thread titled `notes-api · R1`, `notes-api · R2`, and `notes-api · R3`. Each role prompt tells that thread to read the rules and wait `IDLE`. No product file is edited. No test, network call, or Git command is run.
+4. If those thread tools are unavailable, the handoff records `NOT_CREATED` and you receive three prompts. Initialization is not described as successful.
+5. Codex asks you to choose `LIGHT` or `FULL`. Suppose you answer `LIGHT`.
+6. It asks one question: what observable outcome `notes-api` must produce. You answer. It records every fact in the answer, then asks the single highest-impact question that is still open. Confirmed `NOT_APPLICABLE` answers can fill dimensions that do not apply. It does not draft a task card during this questioning.
+7. Suppose the answers cover at least 95% of the weighted table, and the goal, scope, definition of done, security and approval boundary, and blocking dependencies are known. Codex posts a `WAITING_REVIEW` plan: its understanding, the coverage figure, remaining non-blocking unknowns, proposed scope, milestones, acceptance, and risks. Nothing is executed.
+8. You approve that plan. Only then may R0 draft a task card from `docs/governance/TASK-CARD-TEMPLATE.md`. The card has one owner, an id, a version, allowed files and commands, forbidden actions, validation, stop conditions, and the handoffs to read and update. R0 runs the read-only preflight against the workspace, the last accepted baseline, handoffs, dependencies, file ownership, allowed paths, validation, and stop conditions.
+9. A conflict, missing permission, or impossible check produces `REVISE_REQUIRED`. R0 revises the card and returns it for approval. It does not distribute the old text.
+10. A recorded `READY_FOR_OWNER_APPROVAL` result plus your approval of that exact version lets R0 send the card, unchanged, to the named role. That role's completion report lists what it finished, files it changed, commands it actually ran, `NOT_RUN` items, and blockers. It does not report total project progress. The usual status it can reach is `COMPLETED_MODULE_INPUT_READY`.
+11. R0 checks card identity, scope, handoff, evidence, dependencies, and high-risk stop conditions. It updates the R0 and PROJECT handoffs when those checks pass, then drafts the next card as `WAITING_APPROVAL` and waits. Your approval of the first card does not approve the next one.
+12. After the module's subtasks and shared integration are done, R0 runs one systematic acceptance. You decide the following step.
+
+An existing project differs at steps 2 and 6. Codex reads the non-secret tree and the development docs first, reports verified facts, gaps, non-destructive additions, and decisions it needs, and does not ask again for facts those files already state. Stricter rules already in the project stay. Product files stay where they are.
+
+### Validation
+
+From a git checkout or from the installed skill directory:
+
+```bash
+cd coding-rules
+uv run scripts/validate_skill.py
+uv run scripts/test_validate_skill.py
+```
+
+Python 3.11 or newer is required. Without [uv](https://docs.astral.sh/uv/):
+
+```bash
+cd coding-rules
+python3 scripts/validate_skill.py
+python3 -m pip install "pytest>=8,<10"
+python3 -m pytest -q scripts/test_validate_skill.py
+```
+
+`scripts/validate_skill.py` checks the skill directory:
+
+- required files exist, including `references/operating-model.md` and `references/intake-model.md`
+- `SKILL.md` starts with the `coding-rules` frontmatter and has a description
+- relative links in `SKILL.md` resolve
+- R1, R2, and R3 handoffs do not contain the R0-only headings `## 项目总进度` or `## 下一步顺序及审批状态`
+- `._*` and `.DS_Store` files are absent
+- Markdown and YAML files are valid UTF-8 and do not match the script's secret-shaped patterns
+
+It does not launch Codex, and it does not test the project you apply the skill to. An optional argument is a skill root: `uv run scripts/validate_skill.py /path/to/skill`.
+
+CI runs those two commands on Python 3.11 and 3.12 for every push and pull request, then builds the skill zip with `python3 scripts/package_skill.py`. The workflow is [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The badge above reads that workflow's status on the default branch. It stays neutral until the workflow file is on `main`.
+
+Pushing a tag such as `v0.1.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). The tag is what starts the workflow. The workflow validates the skill, zips it as `coding-rules-<version>.zip`, and creates the GitHub Release when one does not already exist for that tag. The change list is [CHANGELOG.md](CHANGELOG.md). No tag has been pushed yet.
+
+### Repository layout
+
+```text
+.
+├── README.md
+├── LICENSE
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+├── SECURITY.md
+├── scripts/package_skill.py
+├── .github/workflows/ci.yml
+├── .github/workflows/release.yml
+└── coding-rules/
+    ├── SKILL.md
+    ├── agents/openai.yaml
+    ├── references/intake-model.md
+    ├── references/operating-model.md
+    ├── scripts/validate_skill.py
+    ├── scripts/test_validate_skill.py
+    └── assets/project-governance/
+```
+
+`agents/openai.yaml` is the skill's display metadata: the name shown in Codex, a short Chinese description, and the default prompt.
+
+### FAQ
+
+**Does `$coding-rules` modify my application?**
+No. The invocation may add or merge governance files only. It does not edit product code.
+
+**Will it run tests, Git, or the network because I invoked it?**
+No. Those actions need to be listed in a later task card that you approve. A returned "done" from R1–R3 is not acceptance and does not approve the next card.
+
+**What is the difference between an empty project and an existing one?**
+An empty project gets the templates copied in. An existing project gets a non-destructive merge. The skill must not invent a stack for an empty project, and it must not re-ask a question the existing docs already answer.
+
+**What is the difference between LIGHT and FULL?**
+`LIGHT` asks less, for a small or well-bounded effort. `FULL` goes through users, flows, functions, data, interfaces, non-functional needs, environments, delivery, risks, and acceptance in more detail. The approval, evidence, and 95% gate still apply. You can switch mode later; answers already confirmed are kept.
+
+**Can a mature project skip intake?**
+The skill does not define that waiver. After initialization it offers `LIGHT` and `FULL`. An existing project still gets a non-secret scan first, and questions those files already answer are not asked again.
+
+**What if Codex cannot create the R1–R3 threads?**
+Those roles are marked `NOT_CREATED`. You get three prompts to send yourself. The skill must not report that thread setup succeeded.
+
+**Who is allowed to state total progress and the next step?**
+Only R0. R1–R3 report their own card, evidence, limits, and that the result went back to R0.
+
+**Why are the templates in Chinese?**
+The skill text, role prompts, and templates in this repository are written in Chinese. The validator checks structure, not translation.
+
+**Does a green validator run mean Codex followed the skill?**
+No. It means this skill directory passed the file checks listed above.
+
+**Where are the community docs?**
+[CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [SECURITY.md](SECURITY.md). Bugs and feature ideas use the issue templates. Please do not put secrets in an issue.
+
+### Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Behavior changes belong in the skill and the templates, and the README should be updated only to match those files.
+
+### License
+
+MIT License. Copyright (c) 2026 Wang-dachui986. See [LICENSE](LICENSE).
+
+## 中文
+
 一个面向 Codex 编程项目的通用治理 Skill。它会为新项目或现有项目建立：
 
 - `AGENTS.md` 执行与审批规则；
@@ -23,7 +273,7 @@
 
 本仓库只包含通用项目开发治理规则和空白模板，不包含任何具体项目源码、凭据或运行证据。
 
-## 安装
+### 安装
 
 ```bash
 git clone https://github.com/Wang-dachui986/coding-rules.git
@@ -31,9 +281,18 @@ mkdir -p ~/.codex/skills
 cp -R coding-rules/coding-rules ~/.codex/skills/coding-rules
 ```
 
-重新打开 Codex 后即可使用。
+若技能没有出现在列表里，重新打开 Codex。
 
-## 调用
+当前文档中的用户技能目录是 `~/.agents/skills`。上面的 `~/.codex/skills` 是本仓库原来的安装路径，也是 `$CODEX_HOME/skills`；内置的 `$skill-installer` 仍安装到那里。同一份内层 `coding-rules` 目录（含 `SKILL.md` 的那一层）放到任一位置即可。
+
+```bash
+mkdir -p ~/.agents/skills
+cp -R coding-rules/coding-rules ~/.agents/skills/coding-rules
+```
+
+只想在某一个仓库里使用时，把同一目录放到该仓库的 `.agents/skills/coding-rules`。
+
+### 调用
 
 在目标项目的 Codex 对话中输入：
 
@@ -58,11 +317,11 @@ R1–R3 对话并补建缺失角色，三个角色保持 `IDLE` 等待 R0 分发
 `WAITING_REVIEW` 的计划供用户审阅。计划获批后，R0 才会编制任务卡并把获批
 任务分发给 R1–R3；用户无需分别管理三个执行对话。
 
-对于已经拥有需求基线、路线图、合同和任务卡流水线的成熟项目，可以在项目
-`AGENTS.md` 中声明免除重复的初始问答，直接恢复当前任务和审批状态。新产品、
-重大重构或没有获批需求基线的新模块仍应重新进入合适的问答模式。
+初始化之后一定会提供 `LIGHT` 和 `FULL`。Skill 和模板里没有“成熟项目可在
+`AGENTS.md` 里免除这轮问答”的规则。已有项目会先读非秘密文档，文件里已经
+写明的问题不会再问。
 
-## 合并与验证
+### 合并与验证
 
 现有项目采用确定性、非破坏性合并顺序：相同规则去重，项目中更严格的规则
 保留，缺失且不冲突的治理门槛补入；路径或角色名称不同但语义一致时保留项目
@@ -73,14 +332,23 @@ R1–R3 对话并补建缺失角色，三个角色保持 `IDLE` 等待 R0 分发
 ```bash
 cd ~/.codex/skills/coding-rules
 uv run scripts/validate_skill.py
+uv run scripts/test_validate_skill.py
 ```
 
-## 仓库结构
+在本仓库中，把目录换成检出的 `coding-rules/` 即可。校验器只检查 Skill 目录，
+不会启动 Codex，也不会测试你之后套用规则的产品项目。
+
+### 仓库结构
 
 ```text
-coding-rules/
+.
 ├── README.md
 ├── LICENSE
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+├── SECURITY.md
+├── scripts/package_skill.py
 └── coding-rules/
     ├── SKILL.md
     ├── agents/openai.yaml
@@ -91,19 +359,8 @@ coding-rules/
     └── assets/project-governance/
 ```
 
-## English
+贡献、行为准则和安全报告见 [CONTRIBUTING.md](CONTRIBUTING.md)、[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) 和 [SECURITY.md](SECURITY.md)。版本说明见 [CHANGELOG.md](CHANGELOG.md)。
 
-`coding-rules` is a reusable Codex skill for project governance. It bootstraps
-approval boundaries, task cards, R0–R3 ownership, multi-conversation routing,
-first-run creation or reuse of the R1–R3 execution threads, context recovery,
-module-level acceptance, approval-aware next steps, evidence rules, an R0-owned
-development-progress artifact, and durable handoffs. It also provides LIGHT and
-FULL requirements-intake modes, asks one question at a time, scans existing
-project documentation non-destructively, and waits until weighted requirements
-coverage reaches 95% before presenting a `WAITING_REVIEW` plan. It contains
-generic governance templates only and does not include product code or project
-secrets.
+### 许可证
 
-## License
-
-MIT License. See [LICENSE](LICENSE).
+MIT License。见 [LICENSE](LICENSE)。
