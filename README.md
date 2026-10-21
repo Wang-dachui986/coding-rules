@@ -115,7 +115,7 @@ For one repository, copy that same directory to `<that-repo>/.agents/skills/codi
 
 To install from GitHub with Codex, invoke `$skill-installer` and ask it to install repository `Wang-dachui986/coding-rules` at path `coding-rules` (ref `main`). That path is the skill directory, not the repository root.
 
-A published release zip has the same inner directory plus `LICENSE` at the archive root. The current release is [v0.1.0](https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.1.0). [CHANGELOG.md](CHANGELOG.md) describes that snapshot and the unreleased 0.2.0 work.
+A published release zip has the same inner directory plus `LICENSE` at the archive root. The current release is [v0.2.0](https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.2.0). [CHANGELOG.md](CHANGELOG.md) describes that release and the earlier `0.1.0` snapshot.
 
 ### Usage
 
@@ -206,7 +206,7 @@ It does not launch Codex, and it does not test the project you apply the skill t
 
 CI runs those two commands on Python 3.11 and 3.12 for every push and pull request, then builds the skill zip with `python3 scripts/package_skill.py`. The workflow is [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The badge above reads that workflow's status on the default branch. It stays neutral until the workflow file is on `main`.
 
-Pushing a tag such as `v0.1.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). The tag is what starts the workflow. The workflow validates the skill, zips it as `coding-rules-<version>.zip`, and creates the GitHub Release when one does not already exist for that tag. [v0.1.0](https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.1.0) is the published release. The change list is [CHANGELOG.md](CHANGELOG.md). Unreleased notes are the 0.2.0 candidate; they are not a tag and not a release.
+Pushing a tag such as `v0.2.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). The tag is what starts the workflow. The workflow validates the skill, zips it as `coding-rules-<version>.zip`, and creates the GitHub Release when one does not already exist for that tag. [v0.2.0](https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.2.0) is the published release. The change list is [CHANGELOG.md](CHANGELOG.md).
 
 ### Repository layout
 

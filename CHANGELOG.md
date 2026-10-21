@@ -7,7 +7,7 @@ and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-Target version: 0.2.0. These notes describe unreleased work. Publishing them does not create a tag or a GitHub Release.
+## [0.2.0] - 2026-10-21
 
 ### Added
 
@@ -52,5 +52,6 @@ evidence.
 - Tracked Python bytecode caches are removed and ignored
 - The README no longer says a mature project can waive requirements intake from `AGENTS.md`. The skill always offers `LIGHT` and `FULL` after initialization. That waiver is not defined in the skill or the templates
 
-[Unreleased]: https://github.com/Wang-dachui986/coding-rules/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Wang-dachui986/coding-rules/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.1.0

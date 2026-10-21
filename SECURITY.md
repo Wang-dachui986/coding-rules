@@ -26,9 +26,8 @@ product defects. Report those to the product that owns them.
 
 ## Supported versions
 
-No GitHub Release has been published yet. Until `v0.1.0` is tagged, the
-maintained line is the `main` branch. After a release is published, only the
-latest `v*` release and `main` are maintained.
+The latest release is `v0.2.0`. Only that release and the `main` branch are
+maintained.
 
 ## Secrets in governance files
 
