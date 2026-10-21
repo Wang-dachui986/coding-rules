@@ -7,6 +7,20 @@ and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+Target version: 0.2.0. These notes describe unreleased work. Publishing them does not create a tag or a GitHub Release.
+
+### Added
+
+- `scripts/scaffold_governance.py` copies missing governance templates into a project. Empty and existing projects both only gain files that are not already there. The command never deletes, moves, renames, or overwrites a file, and it does not fill placeholders or merge rules into an existing file. It refuses the filesystem root and any target inside the skill directory. `mode: empty` reports the skill's emptiness rule; it does not change that write rule. `--dry-run` prints the paths. `$coding-rules` may use the command for the initialization copy it is already allowed to make. Semantic merge, thread setup, and intake stay with the skill.
+- `scripts/report_status.py` prints a Markdown status report from `docs/governance/tasks/*.md`, task-card paths named in `CURRENT-TASKS.md`, and that file's task table. A table path that points at a task card uses the card and does not count that row again. `--tasks-dir` and `--current-tasks` select other paths. A card is counted as accepted only when its task status is `COMPLETED_ACCEPTED` and its `证据状态` is `PASS`. `NOT_RUN`, a missing evidence status, and any other evidence status are listed under 不能视为已验收. The report is a view, not acceptance, and initialization does not approve running it.
+- `docs/governance/CHECKLISTS.md`, with sections for R0 light receipt, the one module acceptance, and release. The checklist adds no status values. A `NOT_RUN` item is not a pass, and finishing a list does not approve the next task or the release.
+- Task cards record `证据状态` as `PASS`, `FAILED`, `NOT_RUN`, or `LIMITED`. The blank template defaults to `NOT_RUN`.
+- Validator checks for the checklist headings, the task-card sections and evidence field, `SKILL.md` mentions of the two commands and the checklist, and the command files themselves.
+
+### Changed
+
+- An empty project now receives twelve governance paths. The twelfth is `docs/governance/CHECKLISTS.md`.
+
 ## [0.1.0] - 2026-10-21
 
 First public snapshot of the `coding-rules` Codex skill. The behavior below is

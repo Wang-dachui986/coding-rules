@@ -18,11 +18,14 @@ REQUIRED_PATHS: Final = (
     "references/intake-model.md",
     "references/operating-model.md",
     "assets/project-governance/AGENTS.md",
+    "assets/project-governance/docs/governance/CHECKLISTS.md",
     "assets/project-governance/docs/governance/CURRENT-TASKS.md",
     "assets/project-governance/docs/governance/HANDOFF-PROTOCOL.md",
     "assets/project-governance/docs/governance/OPERATING-RULES.md",
     "assets/project-governance/docs/governance/TASK-CARD-TEMPLATE.md",
     "assets/project-governance/docs/governance/WORKSTREAMS.md",
+    "scripts/scaffold_governance.py",
+    "scripts/report_status.py",
     "assets/project-governance/docs/handoffs/PROJECT.md",
     "assets/project-governance/docs/handoffs/R0.md",
     "assets/project-governance/docs/handoffs/R1.md",
@@ -30,6 +33,15 @@ REQUIRED_PATHS: Final = (
     "assets/project-governance/docs/handoffs/R3.md",
 )
 FORBIDDEN_ROLE_HEADINGS: Final = ("## 项目总进度", "## 下一步顺序及审批状态")
+CHECKLIST_HEADINGS: Final = ("## 1. R0 轻量接收", "## 2. 模块系统性验收", "## 3. 发布检查")
+TASK_CARD_HEADINGS: Final = (
+    "## 目标与完成定义",
+    "## 禁止事项",
+    "## 验证与验收",
+    "## 交接",
+    "## 返回 R0",
+)
+SKILL_MENTIONS: Final = ("scaffold_governance.py", "report_status.py", "CHECKLISTS.md")
 LINK_PATTERN: Final = re.compile(r"\[[^]]+\]\(([^)]+)\)")
 SECRET_PATTERN: Final = re.compile(
     r"BEGIN (?:RSA|OPENSSH|EC) PRIVATE KEY|vless://|password\s*[:=]|"
@@ -59,6 +71,31 @@ def validate(skill_root: Path) -> list[str]:
             for target in LINK_PATTERN.findall(text):
                 if "://" not in target and not (skill_file.parent / target).resolve().exists():
                     errors.append(f"broken SKILL.md link: {target}")
+            errors.extend(
+                f"SKILL.md does not mention {mention}" for mention in SKILL_MENTIONS if mention not in text
+            )
+
+    checklist = skill_root / "assets/project-governance/docs/governance/CHECKLISTS.md"
+    if checklist.exists():
+        text = _read_utf8(checklist, skill_root, errors)
+        if text is not None:
+            errors.extend(
+                f"CHECKLISTS.md missing heading: {heading}"
+                for heading in CHECKLIST_HEADINGS
+                if heading not in text
+            )
+
+    task_card = skill_root / "assets/project-governance/docs/governance/TASK-CARD-TEMPLATE.md"
+    if task_card.exists():
+        text = _read_utf8(task_card, skill_root, errors)
+        if text is not None:
+            errors.extend(
+                f"TASK-CARD-TEMPLATE.md missing heading: {heading}"
+                for heading in TASK_CARD_HEADINGS
+                if heading not in text
+            )
+            if "证据状态" not in text:
+                errors.append("TASK-CARD-TEMPLATE.md missing 证据状态")
 
     for role in ("R1", "R2", "R3"):
         handoff = skill_root / f"assets/project-governance/docs/handoffs/{role}.md"

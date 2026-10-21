@@ -7,7 +7,7 @@
 
 ## English
 
-`coding-rules` is an MIT-licensed [Codex](https://developers.openai.com/codex/skills) skill for project governance. In Codex CLI or the IDE extension you invoke it with `$coding-rules`. It writes approval rules, role handoffs, and task-card templates into a coding project, then asks requirements questions until a plan is ready for review.
+`coding-rules` is an MIT-licensed [Codex](https://developers.openai.com/codex/skills) skill for project governance. In Codex CLI or the IDE extension you invoke it with `$coding-rules`. It writes approval rules, role handoffs, and task-card templates into a coding project, then asks requirements questions until a plan is ready for review. The skill also ships a non-destructive scaffold command, a task-card status report, and checklists for receipt, module acceptance, and release.
 
 The skill directory is [`coding-rules/`](coding-rules/). The repository root is the maintainer-facing project around that skill. There is no sample application, no credentials, and no recorded run of a product project in this repository.
 
@@ -24,7 +24,7 @@ On an explicit `$coding-rules` invocation, Codex is instructed to:
 
 That invocation authorizes only the read-only classification, the non-destructive governance write, validation of those governance files, and creation of the missing R1–R3 threads. It does not approve product edits, tests, network access, Git, deployment, server access, purchases, messages outside those initialization threads, or destructive actions.
 
-Files an empty project receives (eleven paths):
+Files an empty project receives (twelve paths):
 
 ```text
 AGENTS.md
@@ -32,6 +32,7 @@ docs/governance/OPERATING-RULES.md
 docs/governance/WORKSTREAMS.md
 docs/governance/CURRENT-TASKS.md
 docs/governance/TASK-CARD-TEMPLATE.md
+docs/governance/CHECKLISTS.md
 docs/governance/HANDOFF-PROTOCOL.md
 docs/handoffs/PROJECT.md
 docs/handoffs/R0.md
@@ -114,7 +115,7 @@ For one repository, copy that same directory to `<that-repo>/.agents/skills/codi
 
 To install from GitHub with Codex, invoke `$skill-installer` and ask it to install repository `Wang-dachui986/coding-rules` at path `coding-rules` (ref `main`). That path is the skill directory, not the repository root.
 
-A release zip, once a maintainer publishes one, has the same inner directory plus `LICENSE` at the archive root. No GitHub Release has been published yet. [CHANGELOG.md](CHANGELOG.md) describes the `0.1.0` snapshot in this repository.
+A published release zip has the same inner directory plus `LICENSE` at the archive root. The current release is [v0.1.0](https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.1.0). [CHANGELOG.md](CHANGELOG.md) describes that snapshot and the unreleased 0.2.0 work.
 
 ### Usage
 
@@ -130,12 +131,35 @@ You stay in the R0 conversation for requests and approvals. R0 is instructed to 
 
 Every later approved task, and every resume after context compression or a "continue" message, starts by re-reading `AGENTS.md`, `docs/handoffs/PROJECT.md`, the active role handoff, the approved task card, and the inputs that card cites. Chat memory is not a substitute.
 
+### Scaffold, status report, and checklists
+
+From the installed skill directory, or from `coding-rules/` in a git checkout:
+
+```bash
+# Copy governance templates. Missing files only; nothing is overwritten.
+uv run scripts/scaffold_governance.py /path/to/project
+
+# Show the same paths without writing.
+uv run scripts/scaffold_governance.py /path/to/project --dry-run
+
+# Status report from task cards. This is a view, not acceptance.
+uv run scripts/report_status.py /path/to/project
+```
+
+`scaffold_governance.py` finds its templates next to the script, so the current directory does not matter. `mode: empty` means the project has no meaningful files besides ignored metadata and the governance templates themselves. In both modes the command creates paths that are absent and prints `skipped-existing` for paths that are already there. It does not fill `[待项目所有者确认]` placeholders and it does not merge rules into an existing `AGENTS.md`. `$coding-rules` still does that semantic merge, creates or reuses the R1–R3 threads, and runs intake. The first invocation may use the scaffold command for the file copy it is already allowed to make.
+
+`report_status.py` reads `docs/governance/tasks/*.md`, any task-card path named in `docs/governance/CURRENT-TASKS.md`, and that file's task table. A path that points at a task card uses the card and does not count the table row again. Pass `--tasks-dir` and `--current-tasks` when the project kept other paths. A card is counted as accepted only when its task status is `COMPLETED_ACCEPTED` and its `证据状态` is `PASS`. `NOT_RUN`, a missing evidence status, and any other evidence status are listed under 不能视为已验收. Placeholder rows such as `[待确认]` are not counted as tasks. Running the report is a command; initialization does not approve it. R0 may use the output as the progress view after a command is allowed. R1–R3 do not use it to edit that view.
+
+`docs/governance/CHECKLISTS.md` has three sections: R0 light receipt, the one module acceptance, and release. R0 copies the matching section into the handoff or evidence and marks each item with the existing verification vocabulary. The checklist adds no statuses. A `NOT_RUN` item is not a pass, and finishing a list does not approve the next task or the release.
+
+Without uv, call `python3 scripts/scaffold_governance.py` and `python3 scripts/report_status.py` with the same arguments.
+
 ### Worked example
 
 This is an illustration of the rules in `SKILL.md`. It is not a transcript from a Codex session, and this repository does not contain a `notes-api` project.
 
 1. The target is an empty directory, `notes-api`. No source files, docs, or tests are in it. You install the skill, restart Codex if needed, open Codex in `notes-api`, and send `$coding-rules`.
-2. Codex classifies the tree as empty. It copies the eleven governance paths listed above. Fields it cannot verify stay `[待项目所有者确认]`. It does not invent a language, framework, or feature list.
+2. Codex classifies the tree as empty. It copies the twelve governance paths listed above, and may do that copy with `scaffold_governance.py`. Fields it cannot verify stay `[待项目所有者确认]`. It does not invent a language, framework, or feature list.
 3. It lists existing project threads, then creates any missing long-lived thread titled `notes-api · R1`, `notes-api · R2`, and `notes-api · R3`. Each role prompt tells that thread to read the rules and wait `IDLE`. No product file is edited. No test, network call, or Git command is run.
 4. If those thread tools are unavailable, the handoff records `NOT_CREATED` and you receive three prompts. Initialization is not described as successful.
 5. Codex asks you to choose `LIGHT` or `FULL`. Suppose you answer `LIGHT`.
@@ -144,8 +168,8 @@ This is an illustration of the rules in `SKILL.md`. It is not a transcript from 
 8. You approve that plan. Only then may R0 draft a task card from `docs/governance/TASK-CARD-TEMPLATE.md`. The card has one owner, an id, a version, allowed files and commands, forbidden actions, validation, stop conditions, and the handoffs to read and update. R0 runs the read-only preflight against the workspace, the last accepted baseline, handoffs, dependencies, file ownership, allowed paths, validation, and stop conditions.
 9. A conflict, missing permission, or impossible check produces `REVISE_REQUIRED`. R0 revises the card and returns it for approval. It does not distribute the old text.
 10. A recorded `READY_FOR_OWNER_APPROVAL` result plus your approval of that exact version lets R0 send the card, unchanged, to the named role. That role's completion report lists what it finished, files it changed, commands it actually ran, `NOT_RUN` items, and blockers. It does not report total project progress. The usual status it can reach is `COMPLETED_MODULE_INPUT_READY`.
-11. R0 checks card identity, scope, handoff, evidence, dependencies, and high-risk stop conditions. It updates the R0 and PROJECT handoffs when those checks pass, then drafts the next card as `WAITING_APPROVAL` and waits. Your approval of the first card does not approve the next one.
-12. After the module's subtasks and shared integration are done, R0 runs one systematic acceptance. You decide the following step.
+11. R0 checks card identity, scope, handoff, evidence, dependencies, and high-risk stop conditions, and fills section 1 of `docs/governance/CHECKLISTS.md` in the handoff or evidence. It updates the R0 and PROJECT handoffs when those checks pass, then drafts the next card as `WAITING_APPROVAL` and waits. Your approval of the first card does not approve the next one.
+12. After the module's subtasks and shared integration are done, R0 runs one systematic acceptance and fills section 2 of the checklist. Section 3 is for a later release or deployment, which still needs its own approval. You decide the following step. A task card counts as accepted in `report_status.py` only after its task status is `COMPLETED_ACCEPTED` and its `证据状态` is `PASS`. The blank template leaves `证据状态` as `NOT_RUN`.
 
 An existing project differs at steps 2 and 6. Codex reads the non-secret tree and the development docs first, reports verified facts, gaps, non-destructive additions, and decisions it needs, and does not ask again for facts those files already state. Stricter rules already in the project stay. Product files stay where they are.
 
@@ -170,9 +194,10 @@ python3 -m pytest -q scripts/test_validate_skill.py
 
 `scripts/validate_skill.py` checks the skill directory:
 
-- required files exist, including `references/operating-model.md` and `references/intake-model.md`
-- `SKILL.md` starts with the `coding-rules` frontmatter and has a description
+- required files exist, including `references/operating-model.md`, `references/intake-model.md`, `docs/governance/CHECKLISTS.md`, `scripts/scaffold_governance.py`, and `scripts/report_status.py`
+- `SKILL.md` starts with the `coding-rules` frontmatter, has a description, and names the scaffold command, the status report, and `CHECKLISTS.md`
 - relative links in `SKILL.md` resolve
+- the checklist keeps its three section headings, and the task-card template keeps its required sections plus `证据状态`
 - R1, R2, and R3 handoffs do not contain the R0-only headings `## 项目总进度` or `## 下一步顺序及审批状态`
 - `._*` and `.DS_Store` files are absent
 - Markdown and YAML files are valid UTF-8 and do not match the script's secret-shaped patterns
@@ -181,7 +206,7 @@ It does not launch Codex, and it does not test the project you apply the skill t
 
 CI runs those two commands on Python 3.11 and 3.12 for every push and pull request, then builds the skill zip with `python3 scripts/package_skill.py`. The workflow is [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The badge above reads that workflow's status on the default branch. It stays neutral until the workflow file is on `main`.
 
-Pushing a tag such as `v0.1.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). The tag is what starts the workflow. The workflow validates the skill, zips it as `coding-rules-<version>.zip`, and creates the GitHub Release when one does not already exist for that tag. The change list is [CHANGELOG.md](CHANGELOG.md). No tag has been pushed yet.
+Pushing a tag such as `v0.1.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). The tag is what starts the workflow. The workflow validates the skill, zips it as `coding-rules-<version>.zip`, and creates the GitHub Release when one does not already exist for that tag. [v0.1.0](https://github.com/Wang-dachui986/coding-rules/releases/tag/v0.1.0) is the published release. The change list is [CHANGELOG.md](CHANGELOG.md). Unreleased notes are the 0.2.0 candidate; they are not a tag and not a release.
 
 ### Repository layout
 
@@ -203,6 +228,8 @@ Pushing a tag such as `v0.1.0` runs [`.github/workflows/release.yml`](.github/wo
     ├── references/operating-model.md
     ├── scripts/validate_skill.py
     ├── scripts/test_validate_skill.py
+    ├── scripts/scaffold_governance.py
+    ├── scripts/report_status.py
     └── assets/project-governance/
 ```
 
@@ -230,6 +257,12 @@ Those roles are marked `NOT_CREATED`. You get three prompts to send yourself. Th
 
 **Who is allowed to state total progress and the next step?**
 Only R0. R1–R3 report their own card, evidence, limits, and that the result went back to R0.
+
+**Can I copy the governance files without a Codex conversation?**
+Yes. From the skill directory, `uv run scripts/scaffold_governance.py /path/to/project` creates every missing template and leaves existing files untouched. It does not fill placeholders, merge an existing `AGENTS.md`, create threads, or approve product work. `$coding-rules` still does the semantic merge, the R1–R3 threads, and intake.
+
+**When does the status report count a task as accepted?**
+Only when the task status is `COMPLETED_ACCEPTED` and `证据状态` is `PASS`. `NOT_RUN` stays in the 不能视为已验收 section. The report is a view R0 can paste into the progress artifact after a command is approved. It is not acceptance evidence.
 
 **Why are the templates in Chinese?**
 The skill text, role prompts, and templates in this repository are written in Chinese. The validator checks structure, not translation.
@@ -269,7 +302,10 @@ MIT License. Copyright (c) 2026 Wang-dachui986. See [LICENSE](LICENSE).
 - 计划先进入 `WAITING_REVIEW`，获得批准后才允许执行；
 - 独立的需求、计划、任务、审批、验证、对话、预检和接收状态命名空间；
 - 确定性治理合并规则与可直接运行的 Skill 验证器；
-- 证据真实性、CodeGraph 和验收闭环规则。
+- 证据真实性、CodeGraph 和验收闭环规则；
+- 非破坏性脚手架：只补齐缺失的治理文件，不覆盖已有文件；
+- 从任务卡生成状态报告，证据状态不是 `PASS` 时不计入已验收；
+- 轻量接收、模块验收和发布三份检查清单。
 
 本仓库只包含通用项目开发治理规则和空白模板，不包含任何具体项目源码、凭据或运行证据。
 
@@ -336,7 +372,46 @@ uv run scripts/test_validate_skill.py
 ```
 
 在本仓库中，把目录换成检出的 `coding-rules/` 即可。校验器只检查 Skill 目录，
-不会启动 Codex，也不会测试你之后套用规则的产品项目。
+不会启动 Codex，也不会测试你之后套用规则的产品项目。校验还会确认检查清单的
+三个章节都在、任务卡模板含有 `证据状态`，并且 `SKILL.md` 提到下面两条命令。
+
+### 脚手架、状态报告与检查清单
+
+在已安装的 Skill 目录或本仓库的 `coding-rules/` 中运行：
+
+```bash
+# 只创建缺失的治理模板，不覆盖已有文件
+uv run scripts/scaffold_governance.py /path/to/project
+
+# 只打印将创建和将跳过的路径
+uv run scripts/scaffold_governance.py /path/to/project --dry-run
+
+# 从任务卡生成状态报告。这是报告视图，不是验收证据
+uv run scripts/report_status.py /path/to/project
+```
+
+没有 uv 时，把命令换成 `python3 scripts/scaffold_governance.py` 和
+`python3 scripts/report_status.py`，参数相同。
+
+`scaffold_governance.py` 按脚本所在位置寻找模板，不依赖当前目录。
+`mode: empty` 表示除被忽略的元数据和治理模板之外，没有有效项目文件。
+空项目和已有项目都只补缺失文件，已存在的路径打印 `skipped-existing`。
+脚本不填写 `[待项目所有者确认]`，也不把规则合并进已有的 `AGENTS.md`。
+语义合并、R1–R3 对话和需求问答仍由 `$coding-rules` 完成。首次调用可以用
+脚手架完成它本来就获准的那次非破坏性复制。
+
+`report_status.py` 读取 `docs/governance/tasks/*.md`、`CURRENT-TASKS.md`
+表格里写明的任务卡路径，以及这张表本身。路径指向任务卡时以任务卡为准，
+不把同一路径再计一次。项目如果保留了别的路径，用
+`--tasks-dir` 和 `--current-tasks` 传入。只有任务状态为 `COMPLETED_ACCEPTED`
+且 `证据状态` 为 `PASS` 的卡计入已验收。`NOT_RUN`、缺失或其它证据状态列入
+「不能视为已验收」。`[待确认]` 这类占位行不计入任务。空白任务卡的证据状态
+默认是 `NOT_RUN`。运行报告是一条命令，初始化并不批准它。R0 可以在命令获批后
+把标准输出当作进度视图；R1–R3 不用它修改进度制品。
+
+`docs/governance/CHECKLISTS.md` 有三节：R0 轻量接收、一次模块系统性验收、
+发布检查。R0 把对应章节抄入交接或证据，并用现有验证状态填写。清单不新增
+状态词。`NOT_RUN` 不是通过，填完清单也不批准下一张任务卡或本次发布。
 
 ### 仓库结构
 
@@ -354,6 +429,8 @@ uv run scripts/test_validate_skill.py
     ├── agents/openai.yaml
     ├── scripts/validate_skill.py
     ├── scripts/test_validate_skill.py
+    ├── scripts/scaffold_governance.py
+    ├── scripts/report_status.py
     ├── references/intake-model.md
     ├── references/operating-model.md
     └── assets/project-governance/

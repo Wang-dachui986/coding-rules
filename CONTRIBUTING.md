@@ -35,6 +35,8 @@ is what CI uses. From a checkout:
 cd coding-rules
 uv run scripts/validate_skill.py
 uv run scripts/test_validate_skill.py
+uv run scripts/scaffold_governance.py /path/to/project --dry-run
+uv run scripts/report_status.py /path/to/project
 ```
 
 Without uv:

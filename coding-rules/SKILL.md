@@ -36,6 +36,7 @@ actions.
    docs/governance/WORKSTREAMS.md
    docs/governance/CURRENT-TASKS.md
    docs/governance/TASK-CARD-TEMPLATE.md
+   docs/governance/CHECKLISTS.md
    docs/governance/HANDOFF-PROTOCOL.md
    docs/handoffs/PROJECT.md
    docs/handoffs/R0.md
@@ -46,11 +47,18 @@ actions.
 
 6. For an empty project, copy the templates and replace bracketed placeholders
    with verified facts. Leave unknown decisions as `[待项目所有者确认]`.
+   The copy may be `uv run scripts/scaffold_governance.py <project-root>` from
+   this skill directory. That command creates missing files only. It does not
+   replace placeholders; do that after the copy.
 7. For an existing project, merge instead of overwrite:
    - keep project-specific safety and approval rules;
    - keep established paths and role names when consistent;
    - add missing recovery, task-card, evidence, and handoff gates;
    - never silently weaken an existing rule.
+   The same scaffold command may create governance paths that are not already
+   present. It never merges text into an existing file. Apply the merge order
+   in Template handling to every file the command skips. Pass `--dry-run` to
+   print paths without writing.
 8. On first initialization, create or recover the execution conversations:
    - Use `list_projects` to resolve the current saved project, then
      `list_threads` to inspect existing project threads before creating anything.
@@ -175,6 +183,26 @@ actions.
 - If the tracker is a spreadsheet, keep one stable owner-facing path and verify
   key formulas, formula errors, and every changed sheet's visual rendering after
   each update.
+- At light receipt, at the one systematic module acceptance, and before release
+  or deployment, copy the matching section of
+  [CHECKLISTS.md](assets/project-governance/docs/governance/CHECKLISTS.md) into
+  the handoff or evidence. Mark each item with the existing verification
+  vocabulary. The checklist adds no status values. A `NOT_RUN` item is not a
+  pass. Completing a checklist does not approve the next task or the release.
+- When a command is allowed, R0 may run
+  [report_status.py](scripts/report_status.py) and use stdout as the progress
+  view. A card counts as accepted there only when its task status is
+  `COMPLETED_ACCEPTED` and its `证据状态` is `PASS`. `NOT_RUN`, a missing
+  evidence status, and any other evidence status are listed under
+  不能视为已验收 and are not counted as accepted. Defaults are
+  `docs/governance/tasks/*.md` and `docs/governance/CURRENT-TASKS.md`. A table
+  path that points at a task card uses the card and does not count that row
+  again. Pass `--tasks-dir` and `--current-tasks` when the project kept other
+  paths.
+  R1–R3 do not run this command to edit the progress artifact. Initialization
+  does not approve running it.
+- Task cards record `证据状态` as `PASS`, `FAILED`, `NOT_RUN`, or `LIMITED`.
+  The blank template defaults to `NOT_RUN`.
 
 ## Conversation and agent routing
 
