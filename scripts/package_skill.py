@@ -23,6 +23,9 @@ REQUIRED_NAMES = (
     "coding-rules/agents/openai.yaml",
     "coding-rules/references/operating-model.md",
     "coding-rules/scripts/validate_skill.py",
+    "coding-rules/scripts/scaffold_governance.py",
+    "coding-rules/scripts/report_status.py",
+    "coding-rules/assets/project-governance/docs/governance/CHECKLISTS.md",
 )
 
 
