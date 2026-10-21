@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest a change to the governance skill, templates, or maintainer tooling
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read `coding-rules/SKILL.md` and `coding-rules/references/` first. This skill only does what those files instruct. Do not include secrets in this form.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What governance situation is hard to handle today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What should the skill, template, or repository tooling do differently?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - SKILL.md behavior
+        - Intake or operating model
+        - Project templates
+        - Validator
+        - Docs or repository health
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Optional. Include project-specific rules that should stay in a project's own AGENTS.md instead of this shared skill.

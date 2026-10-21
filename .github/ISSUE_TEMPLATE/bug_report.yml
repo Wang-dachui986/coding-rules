@@ -1,0 +1,47 @@
+name: Bug report
+description: Report a defect in the skill, templates, validator, or repository docs
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Do not include passwords, tokens, private keys, cookies, private URLs, customer data, or raw access logs.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did you see it?
+      options:
+        - Skill behavior (SKILL.md or a Codex session using it)
+        - Governance templates
+        - Validator or tests
+        - README or other docs
+        - GitHub Actions
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the command or the Codex prompt you used. Omit secrets.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Skill version or commit
+      description: Tag, commit SHA, or "main". Leave blank if you are not sure.
+      placeholder: v0.1.0
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Codex surface (CLI or app), operating system, and Python version if you ran the validator.
+      placeholder: Codex CLI, macOS, Python 3.12
